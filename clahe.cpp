@@ -14,6 +14,7 @@
 
 
 #include <cv.h>       // open cv general include file
+#include <opencv2/opencv.hpp>
 
 #include "clahe.h"  // opencv CLAHE include file
 
@@ -66,12 +67,12 @@ static int CLAHE(kz_pixel_t* pImage, unsigned int uiXRes,
 //         pixel depth (8-bit in this case)
 
 void cvAdaptEqualize(IplImage *src, IplImage *dst, 
-			unsigned int xdivs, unsigned int ydivs, unsigned int bins, int range)
+			unsigned int xdivs, unsigned int ydivs, unsigned int bins, int range, char *newImgName)
 {
 	
 	// call CLAHE with negative limit (as flag value) to perform AHE (no limits)
 	
-	cvCLAdaptEqualize(src, dst, xdivs, ydivs, bins, -1.0, range);
+	cvCLAdaptEqualize(src, dst, xdivs, ydivs, bins, -1.0, range, newImgName);
 }
 
 // cvCLAdaptEqualize(src, dst, xdivs, ydivs, bins, limit)
@@ -92,7 +93,7 @@ void cvAdaptEqualize(IplImage *src, IplImage *dst,
 
 void cvCLAdaptEqualize(IplImage *src, IplImage *dst, 
 			unsigned int xdivs, unsigned int ydivs, unsigned int bins, 
-			float limit, int range)
+			float limit, int range, char *dstImgName)
 {
 	
 	double min_val, max_val;
@@ -148,6 +149,7 @@ void cvCLAdaptEqualize(IplImage *src, IplImage *dst,
 		dst = enlargedDst;	// Use the enlarged image instead of the original dst image.
 		enlarged = 1;	// signal that we need to shrink later!
 	}
+
 	// Check if OpenCV adds padding bytes on each row. Added by Shervin Emami, 17Nov2010.
 	if (dst->width != dst->widthStep)
 		CV_ERROR( CV_StsBadFlag, "dst->widthStep should be the same as dst->width. The IplImage has padding, so use a larger image." );
@@ -160,7 +162,7 @@ void cvCLAdaptEqualize(IplImage *src, IplImage *dst,
 		CV_ERROR( CV_StsBadFlag, "ydiv must be an integer multiple of image height " );
 		
 	// get the min and max values of the image
-	
+
 	if (range == CV_CLAHE_RANGE_INPUT) {
 		cvMinMaxLoc(dst, &min_val, &max_val);
 		min = (unsigned char) min_val;
@@ -177,14 +179,22 @@ void cvCLAdaptEqualize(IplImage *src, IplImage *dst,
               (unsigned int) bins, (float) limit);
 
 	//printf("RCODE %i\n", rcode);	
-
+	
 	// If the dst image was enlarged to fit the alignment, then shrink it back now.
 	// Added by Shervin Emami, 17Nov2010.
 	if (enlarged) {
 		//std::cout << "w=" << dst->width << ", h=" << dst->height << ". orig w=" << origW << ", h=" << origH << std::endl;
 		cvResize(dst, tmpDst, CV_INTER_CUBIC);	// Shrink the enlarged image back into the original dst image.
+
 		cvReleaseImage(&dst);	// Free the enlarged image.
 	}
+
+	//std::cout << strlen(dstImgName) << std::endl;
+	if ((dstImgName != "" || dstImgName != NULL) && (strlen(dstImgName)>0) ) {
+		cvSaveImage(dstImgName, tmpDst);
+	}
+
+
 }
 			
 // *****************************************************************************

@@ -88,6 +88,29 @@ int main( int argc, char** argv )
   // if command line arguments are provided try to read image/video_name
   // otherwise default to capture from attached H/W camera 
 
+  char *newImgName = "";
+  bool viewImgs = true; //basic case: see all histograms
+
+  if (argc == 3 && strlen(argv[2])>=5 ) {
+	  newImgName = argv[2]; 
+	  argc = 2;  // just to be able to keep code below as-is
+	  viewImgs = false;
+
+	  //std::cout << "view imgs: " << viewImgs << std::endl;
+  }
+  if (argc == 3 && strlen(argv[2]) < 5) {
+	  std::cout << "Please give longer destination image file, you gave: " << argv[2] << std::endl;
+	  exit(-1);
+  }
+
+  //TODO: needs better argument handling
+
+  if (argc == 2 && strlen(argv[1]) < 5) {
+	  std::cout << "Please give longer source image filename, you gave: " << argv[1] << std::endl;
+	  exit(-1);
+  }
+
+
     if( 
 	  ( argc == 2 && (img = cvLoadImage( argv[1], 1)) != 0 ) ||
 	  ( argc == 2 && (capture = cvCreateFileCapture( argv[1] )) != 0 ) || 
@@ -96,23 +119,25 @@ int main( int argc, char** argv )
     {
       // create window object (use flag=0 to allow resize, 1 to auto fix size)
 
-      cvNamedWindow(windowName, 1);		// flag set to 1 by Shervin Emami, 17Nov2010.
-	  cvNamedWindow(windowName1, 1);	// flag set to 1 by Shervin Emami, 17Nov2010.
-	  cvNamedWindow(windowNameH1, 1);	// flag set to 1 by Shervin Emami, 17Nov2010.
-	  cvNamedWindow(windowNameH2, 1);	// flag set to 1 by Shervin Emami, 17Nov2010.
-		
-      cvNamedWindow("Simple Histogram Equalization", 1);		// Added by Shervin Emami, 17Nov2010.
+		if (viewImgs) {
+			cvNamedWindow(windowName, 1);		// flag set to 1 by Shervin Emami, 17Nov2010.
+			cvNamedWindow(windowName1, 1);	// flag set to 1 by Shervin Emami, 17Nov2010.
+			cvNamedWindow(windowNameH1, 1);	// flag set to 1 by Shervin Emami, 17Nov2010.
+			cvNamedWindow(windowNameH2, 1);	// flag set to 1 by Shervin Emami, 17Nov2010.
 
-	  cvCreateTrackbar("X cells", windowName, &xdivs, 16, NULL);				
-	  cvCreateTrackbar("Y cells", windowName, &ydivs, 16, NULL);
-	  cvCreateTrackbar("bins", windowName, &bins, 256, NULL);
-	  cvCreateTrackbar("limit (x 0.1)", windowName, &limit_counter, 30, NULL);
-		
+			cvNamedWindow("Simple Histogram Equalization", 1);		// Added by Shervin Emami, 17Nov2010.
+
+			cvCreateTrackbar("X cells", windowName, &xdivs, 16, NULL);
+			cvCreateTrackbar("Y cells", windowName, &ydivs, 16, NULL);
+			cvCreateTrackbar("bins", windowName, &bins, 256, NULL);
+			cvCreateTrackbar("limit (x 0.1)", windowName, &limit_counter, 30, NULL);
+		}
+
 	  // define required images for intermediate processing
       // (if using a capture object we need to get a frame first to get the size)
 		
 	  if (capture) {
-	
+		
 		  // cvQueryFrame s just a combination of cvGrabFrame 
 		  // and cvRetrieveFrame in one call.
 		  
@@ -127,7 +152,7 @@ int main( int argc, char** argv )
 		  }
 		  
 	  }
-	  
+
 	  IplImage* grayImg = 
 	  			cvCreateImage(cvSize(img->width,img->height), img->depth, 1);
 	  grayImg->origin = img->origin;
@@ -141,12 +166,12 @@ int main( int argc, char** argv )
 	  // start main loop	
 		
 	  while (keepProcessing) {
-		
+
 		  // if capture object in use (i.e. video/camera)
 		  // get image from capture object
 			
 		  if (capture) {
-	
+
 			  // cvQueryFrame s just a combination of cvGrabFrame 
 			  // and cvRetrieveFrame in one call.
 			  
@@ -167,7 +192,7 @@ int main( int argc, char** argv )
 			  
 			  EVENT_LOOP_DELAY = 0;
 		  }			  
-		
+
 		  // *** Histogram Equalisation Processing
 		  
 			  // if input is not already grayscale, convert to grayscale
@@ -185,46 +210,59 @@ int main( int argc, char** argv )
 				printf("X cells and Y cells must be multiples of image height and image width\n\n");
 
 			  } else {
-  			    CV_TIMER_START(X)  
+
+				CV_TIMER_START(X);
+
  				cvCLAdaptEqualize(grayImg, eqImg, (unsigned int) xdivs, (unsigned int) ydivs, 
-					(unsigned int) bins, (float) limit_counter * 0.1, CV_CLAHE_RANGE_FULL);
-			  	CV_TIMER_STOP(X, "CLAHE")
+					(unsigned int) bins, (float) limit_counter * 0.1, CV_CLAHE_RANGE_FULL, newImgName);
+				CV_TIMER_STOP(X, "CLAHE");
+
+				if (EVENT_LOOP_DELAY == 0) {
+					keepProcessing = false;
+				}
 			  }
 			  
 			  
 		  // ***
-		  
+
 	      // *** draw histograms 	  
-			
-		  create_histogram_image(grayImg, grayHistogramImage);
-		  create_histogram_image(eqImg, eqHistogramImage);		  
-			  
-		  // display image in window
-	
-		  cvShowImage( windowName,  eqImg );
-		  cvShowImage( windowName1, grayImg );
-		  
-		  cvShowImage( windowNameH1,  eqHistogramImage );
-		  cvShowImage( windowNameH2, grayHistogramImage );	  
+			  if (viewImgs) {
 
-		  // Simple Histogram Equalization. Added by Shervin Emami, 17Nov2010.
-		  IplImage *histEqImage = cvCreateImage(cvGetSize(grayImg), grayImg->depth, grayImg->nChannels);
-		  cvEqualizeHist(grayImg, histEqImage);
-		  cvShowImage( "Simple Histogram Equalization",  histEqImage );
-		  cvReleaseImage(&histEqImage);
+				  create_histogram_image(grayImg, grayHistogramImage);
+				  create_histogram_image(eqImg, eqHistogramImage);
 
-		  // start event processing loop (very important,in fact essential for GUI)
-	      // 4 ms roughly equates to 100ms/25fps = 4ms per frame
-		  
-		  key = cvWaitKey(EVENT_LOOP_DELAY);
+				  // display image in window
 
-		  if (key == 'x' || key == 27) {	// 'Esc' key added by Shervin Emami, 17Nov2010.
-			
-	   		// if user presses "x" or 'Esc' then exit
-			
-	   			printf("Keyboard exit requested : exiting now - bye!\n");	
-	   			keepProcessing = false;
-		  } 
+				  cvShowImage(windowName, eqImg);
+				  cvShowImage(windowName1, grayImg);
+
+				  cvShowImage(windowNameH1, eqHistogramImage);
+				  cvShowImage(windowNameH2, grayHistogramImage);
+
+				  // Simple Histogram Equalization. Added by Shervin Emami, 17Nov2010.
+				  IplImage *histEqImage = cvCreateImage(cvGetSize(grayImg), grayImg->depth, grayImg->nChannels);
+				  cvEqualizeHist(grayImg, histEqImage);
+
+				  cvShowImage("Simple Histogram Equalization", histEqImage);
+
+				  cvReleaseImage(&histEqImage);
+
+				  // start event processing loop (very important,in fact essential for GUI)
+				  // 4 ms roughly equates to 100ms/25fps = 4ms per frame
+
+				  key = cvWaitKey(EVENT_LOOP_DELAY);
+
+				  if (key == 'x' || key == 27 ) {	// 'Esc' key added by Shervin Emami, 17Nov2010.
+
+					// if user presses "x" or 'Esc' then exit
+
+					  printf("Keyboard exit requested : exiting now - bye!\n");
+					  keepProcessing = false;
+				  }
+
+
+			  }
+
 	  }
       
       // destroy window objects

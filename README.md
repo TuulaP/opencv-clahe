@@ -23,8 +23,10 @@ Running program has dependency req to couple of opencv dlls, which are included.
 
 ## TODO & :warning: 
 
+* Better argument handling (some argument combinations can/will cause crashes...)
 * sort out the extra dlls real need
 * opencv version could be upgraded to a newer one from 2.3.1 
+* Simple test cases
 etc.
 
 
@@ -32,20 +34,32 @@ etc.
 
 Once you have setup opencv
 
-1. Open the opencv-clahe-nlf.sln in Visual Studio
+1. Open the clahe.sln in Visual Studio
 2. Pick Release, x64 and build solution
 
-You should get to executable called 'clahe.exe'
+You should get to executable called 'clahe.exe' . (The 3 .dlls should accompany the exe)
 
 In case of issues check property files, that opencv directories and libraries are correct.
 
 
 ## Usage
 
-clahe.exe image.png
+```clahe image.png output.png```
+
+Runs the alorithm, and saves the output to output.png. Does not show histogram etc. windows.
+
+
+```clahe.exe image.png```
+
+Uses the input image and draws the histogram windows to the screen
+
+```clahe.exe```
 
 Without image assumes and tries to use webcamera of the machine.
-NB. You can shutdown the program windows via Esc.
+:bell: NB. You can shutdown the program windows via Esc.
+
+
+
 
 
 

@@ -34,9 +34,10 @@
 // range - either of CV_CLAHE_RANGE_INPUT or CV_CLAHE_RANGE_FULL to limit the output
 //         pixel range to the min/max range of the input image or the full range of the
 //         pixel depth (8-bit in this case)
+// dstImgName - name of the new file
 
 void cvAdaptEqualize(IplImage *src, IplImage *dst, 
-			unsigned int xdivs, unsigned int ydivs, unsigned int bins, int range);
+			unsigned int xdivs, unsigned int ydivs, unsigned int bins, int range, char *newImgName);
 
 // cvCLAdaptEqualize(src, dst, xdivs, ydivs, bins, limit)
 //
@@ -49,11 +50,12 @@ void cvAdaptEqualize(IplImage *src, IplImage *dst,
 // range - either of CV_CLAHE_RANGE_INPUT or CV_CLAHE_RANGE_FULL to limit the output
 //         pixel range to the min/max range of the input image or the full range of the
 //         pixel depth (8-bit in this case)
+// dstImgName - name of the new file
 
 
 void cvCLAdaptEqualize(IplImage *src, IplImage *dst, 
 			unsigned int xdivs, unsigned int ydivs, unsigned int bins, float limit,
-			int range);
+			int range, char *dstImgName);
 	
 // *****************************************************************************
 	
