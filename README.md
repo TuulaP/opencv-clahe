@@ -55,8 +55,10 @@ Uses the input image and draws the histogram windows to the screen
 
 ```clahe.exe```
 
-Without image assumes and tries to use webcamera of the machine.
-:bell: NB. You can shutdown the program windows via Esc.
+
+Without the image assumes and tries to use webcamera of the machine.
+NB. You can shutdown the program windows via Esc. :bell:
+ 
 
 
 
